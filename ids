@@ -1,0 +1,46 @@
+#!/bin/bash
+#==============================================================================
+#
+#          FILE:  login-alert
+#
+#         USAGE: 
+#
+#   DESCRIPTION: This script is used to send login alert to admin
+#
+#        AUTHOR:  Team LocalHost
+#       VERSION:  1.0
+#       CREATED:  23/03/2019 10:12:08 AM IST
+#===============================================================================
+
+#Checking if the required curl package is installed or not.
+if [ $(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+    apt-get install curl -y;
+fi
+
+#Checking if the required ssmtp package is installed or not.
+if [ $(dpkg-query -W -f='${Status}' ssmtp 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+    sudo apt-get install ssmtp -y;
+fi
+
+#Checking if the required mailutils package is installed or not.
+if [ $(dpkg-query -W -f='${Status}' mailutils 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+    sudo apt-get install mailutils -y;
+fi
+
+##THIRD One
+
+pam_com_auth="/etc/pam.d/common-auth"
+
+success_count=($(grep 'success=' $pam_com_auth | cut -d '=' -f 2 | awk '{print $1}'))
+for(( c=0 ; c<${#success_count[@]} ; c++ ))
+do
+    temp=${success_count[$c]}
+    sudo sed -i "s/success=$temp/success=$((temp+1))/g" $pam_com_auth
+done
+if ! grep -q '/usr/bin/failed-login-alert' $pam_com_auth; then
+   sed -i '/pam_deny.so/i auth [default=ignore] pam_exec.so seteuid /usr/bin/failed-login-alert' $pam_com_auth
+fi
+

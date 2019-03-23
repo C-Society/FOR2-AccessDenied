@@ -12,4 +12,9 @@ c. If too many failed log-in attempt from a particular client, inform the admin.
 
 https://for2-accessdenied.herokuapp.com/console/api-explorer
 
+## Third problem
+
+failed-login-alert.sh
+
+https://askubuntu.com/questions/727156/email-on-failed-login-attempt
 
