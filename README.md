@@ -18,7 +18,7 @@ https://for2-accessdenied.herokuapp.com/console/api-explorer
 
 ## Commom Components
 
-We are using postfix for mail server. The email address is already hardcoded with email "rachitmanchandas@gmail.com". 
+We are using postfix for mail server. The email address is already hardcoded with email "rachitmanchandas@gmail.com". The email will be send to the admin, Admin is also hardcoded.
 
 
 ## Main Script
