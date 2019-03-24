@@ -27,13 +27,7 @@ timestamp=$(date)
 -H 'Connection: keep-alive' \
 --data-binary '{"query":"mutation {\n  insert_login_failed(objects: {hostname: \"'"$hostname"'\", timestamp: \"'"$timestamp"'\", username: \"'"$username"'\"}) {\n    affected_rows\n  }\n}\n","variables":null}' --compressed &$
 
+# Mailing the Admin
+echo "username: $username try to login in hostname: $hostname at timestamp: $timestamp" | mail -s "$username Failed Login" dev.csociety@gmail.com
 
 exit 0
-
-# sender="hostname@example.com"
-# recepient="admingroup@example.com"
-# subject="Privileged Account logon used"
-# message="`env`"
-#     echo "$message" | mail -s "$subject" -r "$sender" "$recepient"
-
-# cURL request to append data in GraphQl Hasura

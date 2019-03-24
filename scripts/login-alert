@@ -12,24 +12,11 @@
 #       CREATED:  23/03/2019 10:12:08 AM IST
 #===============================================================================
 
-
-
-# Checking if the required curl package is installed or not.
-#if [ $(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed") -eq 0 ];
-#then
-#    apt-get install curl -y;
-#fi
-
 username=$(whoami)
 hostname=$(hostname)
 timestamp=$(date)
 heroku_url=
 
-# sender="hostname@example.com"
-# recepient="admingroup@example.com"
-# subject="Privileged Account logon used"
-# message="`env`"
-#     echo "$message" | mail -s "$subject" -r "$sender" "$recepient"
 
 # cURL request to append data in GraphQl Hasura
 /usr/bin/curl $heroku_url \
@@ -38,5 +25,8 @@ heroku_url=
 -H 'Accept: */*' \
 -H 'Connection: keep-alive' \
 --data-binary '{"query":"mutation {\n  insert_login_details(objects: {hostname: \"'"$hostname"'\", timestamp: \"'"$timestamp"'\", username: \"'"$username"'\"}) {\n    affected_rows\n  }\n}\n","variables":null}' --compressed &> /dev/null
+
+# Mailing the Admin
+echo "username: $username login in hostname: $hostname at timestamp: $timestamp" | mail -s "$username Logged in" dev.csociety@gmail.com
 
 exit 0

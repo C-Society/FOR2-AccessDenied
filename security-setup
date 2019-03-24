@@ -19,6 +19,7 @@ fi
 
 login_alert="/scripts/login-alert.sh"
 failed_login_alert="/scripts/failed-login-alert.sh"
+check_modify="/scripts/check-modify"
 heroku_url="https://for2-accessdenied.herokuapp.com/v1alpha1/graphql"
 
 user=$(whoami)
@@ -29,12 +30,13 @@ CYAN='\033[0;36m'
 directory_check() {
   if [[ ! -d "$1" ]]; then
     echo -e "${LIGHT_RED}File: $1 does not exist. Please get a complete copy of setup"
+    exit 1;
   fi
 }
 
-directory_check login_alert
-directory_check failed_login_alert
-#directory_check ## 1st wale kai liye
+directory_check $login_alert
+directory_check $failed_login_alert
+directory_check $check_modify
 
 #Checking if the required curl package is installed or not.
 if [ $(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed") -eq 0 ];
@@ -43,9 +45,9 @@ then
 fi
 
 #Checking if the required ssmtp package is installed or not.
-if [ $(dpkg-query -W -f='${Status}' ssmtp 2>/dev/null | grep -c "ok installed") -eq 0 ];
+if [ $(dpkg-query -W -f='${Status}' postfix 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
-    apt-get install ssmtp -y;
+  apt-get install postfix mailutils libsasl2-2 ca-certificates libsasl2-modules -y;
 fi
 
 #Checking if the required mailutils package is installed or not.
@@ -54,12 +56,36 @@ then
     apt-get install mailutils -y;
 fi
 
+# Setting up the mail server
+touch /etc/postfix/main.cf
+touch /etc/postfix/sasl_passwd
+
+cat >/etc/postfix/main.cf << EOL
+relayhost = [smtp.gmail.com]:587
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/postfix/cacert.pem
+smtp_use_tls = yes
+EOL
+
+cat>/etc/postfix/sasl_passwd << EOL
+[smtp.gmail.com]:587    rachitmanchandas@gmail.com:rachit20
+EOL
+
+sudo chmod 400 /etc/postfix/sasl_passwd 2>&1
+sudo postmap /etc/postfix/sasl_passwd 2>&1
+
+cat /etc/ssl/certs/thawte_Primary_Root_CA.pem | sudo tee -a /etc/postfix/cacert.pem 2>&1
+
+sudo /etc/init.d/postfix reload 2>&1
+
 ## Setup the files to give Admin notification for each user login.
 
-sed -i "s/heroku_url=/heroku_url=$heroku_url/g" $login_alert
-cp $login_alert /etc/profile.d/
-chown "$user":"$user" /etc/profile.d/login-alert
-chmod a+x /etc/profile.d/login-alert
+sed -i "s/heroku_url=/heroku_url=$heroku_url/g" $login_alert 2>&1
+cp $login_alert /etc/profile.d/ 2>&1
+chown "$user":"$user" /etc/profile.d/login-alert 2>&1
+chmod a+x /etc/profile.d/login-alert 2>&1
 
 ##THIRD One
 

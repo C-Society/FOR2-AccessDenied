@@ -1,0 +1,86 @@
+#!/bin/bash
+#==============================================================================
+#
+#          FILE:  check-modify
+#
+#         USAGE: 
+#
+#   DESCRIPTION: This script is used to send alert when specific resource is used
+#
+#        AUTHOR:  Team LocalHost
+#       VERSION:  1.0
+#       CREATED:  24/03/2019 00:28:45 AM IST
+#===============================================================================
+
+new_log="/etc/security-setup/check-modify-new.log"
+old_log="/etc/security-setup/check-modify-old.log"
+config_file="/etc/security-setup/check-modify.conf"
+current_log="/etc/security-setup/check-modify-curr.log"
+
+if [ "$EUID" -ne 0 ]; then 
+  echo "Please run as sudo user"
+  exit 1
+fi
+
+hostname=$(hostname)
+
+# Check if log file exist and creating if does not exist
+if [ ! -f $config_file ];
+then
+  mkdir -p /etc/security-setup/
+  touch $config_file
+	cat >$config_file << EOL
+/etc/passwd
+/etc/fstab
+ssh
+EOL
+fi
+
+if [ ! -f "$new_log" ];
+then
+  mkdir -p /etc/security-setup/
+  touch "$new_log"
+fi
+
+if [ ! -f "$old_log" ];
+then
+  mkdir -p /etc/security-setup/
+  touch "$old_log"
+fi
+
+if [ ! -f "$current_log" ];
+then
+  mkdir -p /etc/security-setup/
+  touch "$current_log"
+fi
+
+i=0
+res=()
+while read line
+do
+	res+=(" -e ")
+	res+=(" $line")
+done < $config_file
+
+while true
+do
+	cp $new_log $old_log
+	ps aux | grep ${res[@]} > $new_log
+	diff --changed-group-format='%<' --unchanged-group-format='' $new_log $old_log > $current_log
+	while read line
+	do
+		if [[ ! $line == *"grep -e"* ]]; then
+		# cURL request to append data in GraphQl Hasura
+			username=$(echo $line | awk '{print $1}')
+			proc=$(echo $line | awk '{print $11 $12 $13 $14}')
+			timestamp=$(date)
+			/usr/bin/curl 'https://for2-accessdenied.herokuapp.com/v1alpha1/graphql' \
+			-H 'Accept-Encoding: gzip, deflate, br' \
+			-H 'content-type: application/json' \
+			-H 'Accept: */*' \
+			-H 'Connection: keep-alive' \
+			--data-binary '{"query":"mutation {\n  insert_check_access(objects: {hostname: \"'"$hostname"'\", timestamp: \"'"$timestamp"'\", username: \"'"$username"'\" process: \"'"$proc"'\"}) {\n    affected_rows\n  }\n}\n","variables":null}' --compressed &$
+		fi
+	done < $current_log
+	sleep 1
+done
