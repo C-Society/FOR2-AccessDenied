@@ -18,9 +18,8 @@ https://for2-accessdenied.herokuapp.com/console/api-explorer
 
 ## Commom Components
 
-We are using postfix for mail server. The email address is already hardcoded with email "rachitmanchandas@gmail.com". The email will be send to the admin, Admin is also hardcoded and can be changed by passing as argument in shell script "Security-setup".
+We are using postfix for mail server. The email address is already hardcoded with email "rachitmanchandas@gmail.com". 
 
-for example: sudo ./security-setup xyz@example.com
 
 ## Main Script
 
