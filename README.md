@@ -22,7 +22,7 @@ We are using postfix for mail server. The email address is already hardcoded wit
 The Heroku API and the admin email can be changed by adding the arguments in the security-setup script.
 
 For Example:
-'''security-setup -e [admin email] -a [herokuapi]'''
+```security-setup -e [admin email] -a [herokuapi]```
 
 We also have security-setup -h for help menu.
 
