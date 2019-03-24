@@ -8,7 +8,7 @@ b. Admin should get notification for each user login.
 
 c. If too many failed log-in attempt from a particular client, inform the admin.
 
-## Prequiste
+## Prerequisite
 
 The script is made for ubuntu 18.10
 
