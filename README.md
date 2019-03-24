@@ -19,6 +19,12 @@ https://for2-accessdenied.herokuapp.com/console/api-explorer
 ## Commom Components
 
 We are using postfix for mail server. The email address is already hardcoded with email "rachitmanchandas@gmail.com". The email will be send to the admin, Admin is also hardcoded.
+The Heroku API and the admin email can be changed by adding the arguments in the security-setup script.
+
+For Example:
+'''security-setup -e [admin email] -a [herokuapi]'''
+
+We also have security-setup -h for help menu.
 
 
 ## Main Script
