@@ -17,9 +17,9 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-login_alert="/scripts/login-alert.sh"
-failed_login_alert="/scripts/failed-login-alert.sh"
-check_modify="/scripts/check-modify"
+login_alert="$(pwd)/scripts/login-alert"
+failed_login_alert="$(pwd)/scripts/failed-login-alert"
+check_modify="$(pwd)/scripts/check-modify"
 heroku_url="https://for2-accessdenied.herokuapp.com/v1alpha1/graphql"
 
 user=$(whoami)
@@ -28,7 +28,7 @@ LIGHT_RED='\033[1;31m'
 CYAN='\033[0;36m'
 
 directory_check() {
-  if [[ ! -d "$1" ]]; then
+  if [[ ! -f "$1" ]]; then
     echo -e "${LIGHT_RED}File: $1 does not exist. Please get a complete copy of setup"
     exit 1;
   fi
@@ -47,7 +47,7 @@ fi
 #Checking if the required ssmtp package is installed or not.
 if [ $(dpkg-query -W -f='${Status}' postfix 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
-  apt-get install postfix mailutils libsasl2-2 ca-certificates libsasl2-modules -y;
+  apt-get install postfix mailutils libsasl2-2 ca-certificates libsasl2-modules -yq;
 fi
 
 #Checking if the required mailutils package is installed or not.
@@ -55,6 +55,31 @@ if [ $(dpkg-query -W -f='${Status}' mailutils 2>/dev/null | grep -c "ok installe
 then
     apt-get install mailutils -y;
 fi
+
+## Second one
+
+sed -i "s|heroku_url=|heroku_url=\"$heroku_url\"|" $login_alert 2>&1
+cp $login_alert /etc/profile.d/ 2>&1
+chown "$user":"$user" /etc/profile.d/login-alert 2>&1
+chmod a+x /etc/profile.d/login-alert 2>&1
+
+## Third One
+
+pam_com_auth="/etc/pam.d/common-auth"
+
+success_count=($(grep 'success=' $pam_com_auth | cut -d '=' -f 2 | awk '{print $1}'))
+for(( c=0 ; c<${#success_count[@]} ; c++ ))
+do
+    temp=${success_count[$c]}
+    sudo sed -i "s/success=$temp/success=$((temp+1))/g" $pam_com_auth
+done
+if ! grep -q '/usr/bin/failed-login-alert' $pam_com_auth; then
+   sed -i '/pam_deny.so/i auth [default=ignore] pam_exec.so seteuid /usr/bin/failed-login-alert' $pam_com_auth
+fi
+
+cp $failed_login_alert /usr/bin/failed-login-alert
+chown "$user":"$user" /usr/bin/failed-login-alert
+chmod a+x /usr/bin/failed-login-alert
 
 # Setting up the mail server
 touch /etc/postfix/main.cf
@@ -78,29 +103,4 @@ sudo postmap /etc/postfix/sasl_passwd 2>&1
 
 cat /etc/ssl/certs/thawte_Primary_Root_CA.pem | sudo tee -a /etc/postfix/cacert.pem 2>&1
 
-sudo /etc/init.d/postfix reload 2>&1
-
-## Setup the files to give Admin notification for each user login.
-
-sed -i "s/heroku_url=/heroku_url=$heroku_url/g" $login_alert 2>&1
-cp $login_alert /etc/profile.d/ 2>&1
-chown "$user":"$user" /etc/profile.d/login-alert 2>&1
-chmod a+x /etc/profile.d/login-alert 2>&1
-
-##THIRD One
-
-pam_com_auth="/etc/pam.d/common-auth"
-
-success_count=($(grep 'success=' $pam_com_auth | cut -d '=' -f 2 | awk '{print $1}'))
-for(( c=0 ; c<${#success_count[@]} ; c++ ))
-do
-    temp=${success_count[$c]}
-    sudo sed -i "s/success=$temp/success=$((temp+1))/g" $pam_com_auth
-done
-if ! grep -q '/usr/bin/failed-login-alert' $pam_com_auth; then
-   sed -i '/pam_deny.so/i auth [default=ignore] pam_exec.so seteuid /usr/bin/failed-login-alert' $pam_com_auth
-fi
-
-cp $failed_login_alert /usr/bin/failed-login-alert
-chown "$user":"$user" /usr/bin/failed-login-alert
-chmod a+x /usr/bin/failed-login-alert
+/etc/init.d/postfix reload 2>&1
