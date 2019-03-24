@@ -17,10 +17,63 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+print_help() {
+
+  cat << EF
+One stop script for whole implementaion.
+
+-e              Admin email
+-a              Heroku api
+-h              Help.
+
+EXAMPLE:
+
+sudo ./security-setup -h
+sudo ./security-setup -e [admin-email]
+sudo ./security-setup -e [admin-email] -a [heroku api]
+sudo ./security-setup -a [heroku api]
+EF
+
+}
+
+while getopts ":e:a:h" opt; do
+	case $opt in
+    a)
+      heroku_url="$OPTARG"
+    ;;
+    e)
+      admin_email="$OPTARG"
+    ;;
+		h | *)
+			print_help
+            exit 0
+		;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			exit 1
+		;;
+		:)
+			echo "Option -$OPTARG requires an argument." >&2
+			exit 1
+		;;
+	esac
+done
+
+if [ -z "$1" ];then
+  admin_email="dev.csociety@gmail.com"
+else
+  admin_email=$1  
+fi
+
+if [ -z "$2" ];then
+  heroku_url="https://for2-accessdenied.herokuapp.com/v1alpha1/graphql"
+else
+  heroku_url=$2
+fi
+
 login_alert="$(pwd)/scripts/login-alert"
 failed_login_alert="$(pwd)/scripts/failed-login-alert"
 check_modify="$(pwd)/scripts/check-modify"
-heroku_url="https://for2-accessdenied.herokuapp.com/v1alpha1/graphql"
 
 user=$(whoami)
 YELLOW='\033[0;33m'
@@ -57,14 +110,16 @@ then
 fi
 
 ## Second one
-
-sed -i "s|heroku_url=|heroku_url=\"$heroku_url\"|" $login_alert 2>&1
+sed -i "s|admin_email=|admin_email=\"$admin_email\"|" $failed_login_alert 2>&1
+sed -i "s|heroku_url=|heroku_url=\"$heroku_url\"|" $failed_login_alert 2>&1
 cp $login_alert /etc/profile.d/ 2>&1
 chown "$user":"$user" /etc/profile.d/login-alert 2>&1
 chmod a+x /etc/profile.d/login-alert 2>&1
 
 ## Third One
 
+sed -i "s|admin_email=|admin_email=\"$admin_email\"|" $login_alert 2>&1
+sed -i "s|heroku_url=|heroku_url=\"$heroku_url\"|" $login_alert 2>&1
 pam_com_auth="/etc/pam.d/common-auth"
 
 success_count=($(grep 'success=' $pam_com_auth | cut -d '=' -f 2 | awk '{print $1}'))

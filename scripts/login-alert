@@ -12,9 +12,12 @@
 #       CREATED:  23/03/2019 10:12:08 AM IST
 #===============================================================================
 
+PATH=/bin:/usr/bin
+
 username=$(whoami)
 hostname=$(hostname)
 timestamp=$(date)
+admin_email=
 heroku_url=
 
 
@@ -27,6 +30,6 @@ heroku_url=
 --data-binary '{"query":"mutation {\n  insert_login_details(objects: {hostname: \"'"$hostname"'\", timestamp: \"'"$timestamp"'\", username: \"'"$username"'\"}) {\n    affected_rows\n  }\n}\n","variables":null}' --compressed &> /dev/null
 
 # Mailing the Admin
-echo "username: $username login in hostname: $hostname at timestamp: $timestamp" | mail -s "$username Logged in" dev.csociety@gmail.com
+echo "username: $username login in hostname: $hostname at timestamp: $timestamp" | mail -s "$username Logged in" $admin_email
 
 exit 0
