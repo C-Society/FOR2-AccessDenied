@@ -30,6 +30,7 @@ security-setup is the main script which will be responsible for all the setup.
 
 When the user logs in, This script will send mail to admin and send the data to heroku where we are storing it in hasura graphql.
 
+
 ## failed-login-alert
 
 When the system detects bad login, This script will send mail to admin and send the data to heroku where we are storing it in hasura graphql.
@@ -45,3 +46,7 @@ All the scenerios will send email and data to hasura database.
 ## Troubleshooting
 
 If you see error about postfix service not restarting please reboot the system and try again.
+
+## Please Note
+
+Do not run the security-setup script twice.
