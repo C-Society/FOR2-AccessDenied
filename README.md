@@ -12,20 +12,15 @@ c. If too many failed log-in attempt from a particular client, inform the admin.
 
 The script is made for ubuntu 18.10
 
-## Heroku API
-
-https://for2-accessdenied.herokuapp.com/console/api-explorer
-
 ## Commom Components
 
-We are using postfix for mail server. The email address is already hardcoded with email "rachitmanchandas@gmail.com". The email will be send to the admin, Admin is also hardcoded.
-The Heroku API and the admin email can be changed by adding the arguments in the security-setup script.
+We are using postfix for mail server. The email will be send to the email of admin provided during setup.
+The Heroku API, Sender E-Mail, Sender Password, Admin API need to passed by cmd arguments in the security-setup script.
 
 For Example:
-```security-setup -e [admin email] -a [herokuapi]```
+```sudo ./security-setup -e [admin-email] -a [heroku api] -s [Sender E-Mail] -p [Sender Password]```
 
 We also have security-setup -h for help menu.
-
 
 ## Main Script
 
@@ -34,7 +29,6 @@ security-setup is the main script which will be responsible for all the setup.
 ## login-alert
 
 When the user logs in, This script will send mail to admin and send the data to heroku where we are storing it in hasura graphql.
-
 
 ## failed-login-alert
 

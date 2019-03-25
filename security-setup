@@ -24,25 +24,31 @@ One stop script for whole implementaion.
 
 -e              Admin email
 -a              Heroku api
+-s              Sender E-Mail
+-p              Sender Password
 -h              Help.
 
 EXAMPLE:
 
 sudo ./security-setup -h
-sudo ./security-setup -e [admin-email]
-sudo ./security-setup -e [admin-email] -a [heroku api]
-sudo ./security-setup -a [heroku api]
+sudo ./security-setup -e [admin-email] -a [heroku api] -s [Sender E-Mail] -p [Sender Password]
 EF
 
 }
 
-while getopts ":e:a:h" opt; do
+while getopts ":e:s:p:a:h" opt; do
 	case $opt in
     a)
       heroku_url="$OPTARG"
     ;;
     e)
       admin_email="$OPTARG"
+    ;;
+    s)
+      sender_email="$OPTARG"
+    ;;
+    p)
+      sender_passwd="$OPTARG"
     ;;
 		h | *)
 			print_help
@@ -59,18 +65,21 @@ while getopts ":e:a:h" opt; do
 	esac
 done
 
-if [ -z "$1" ];then
-  admin_email="dev.csociety@gmail.com"
-else
-  admin_email=$1  
+if [ -z "$admin_email" ];then
+  echo "${LIGHT_RED}Admin E-Mail not provided"
 fi
 
-if [ -z "$2" ];then
-  heroku_url="https://for2-accessdenied.herokuapp.com/v1alpha1/graphql"
-else
-  heroku_url=$2
+if [ -z "$heroku_url" ];then
+  heroku_url="${LIGHT_RED}Admin Hasura API not provided"
 fi
 
+if [ -z "$sender_email" ];then
+  echo "${LIGHT_RED}Sender E-Mail not provided"
+fi
+
+if [ -z "$sender_passwd" ];then
+  echo "${LIGHT_RED}Sender password not provided"
+fi
 login_alert="$(pwd)/scripts/login-alert"
 failed_login_alert="$(pwd)/scripts/failed-login-alert"
 check_modify="$(pwd)/scripts/check-modify"
@@ -150,7 +159,7 @@ smtp_use_tls = yes
 EOL
 
 cat>/etc/postfix/sasl_passwd << EOL
-[smtp.gmail.com]:587    rachitmanchandas@gmail.com:rachit20
+[smtp.gmail.com]:587    $sender_email:$sender_passwd
 EOL
 
 sudo chmod 400 /etc/postfix/sasl_passwd 2>&1
